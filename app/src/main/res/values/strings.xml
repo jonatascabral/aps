@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">APS</string>
+    <string name="title_activity_main">Mapa</string>
+    <string name="action_settings">Configurações</string>
+    <string name="action_notice">Notificar</string>
+    <string name="title_activity_form">FormActivity</string>
+    <string name="your_name">Seu Nome:</string>
+    <string name="your_email">Seu E-mail:</string>
+    <string name="description">Descreva o vazamento:</string>
+    <string name="save">Salvar</string>
+</resources>
