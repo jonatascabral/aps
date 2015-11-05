@@ -8,7 +8,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -62,6 +62,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
         }
         if (id == R.id.action_new_notice) {
             Intent newNoticeIntent = new Intent(getBaseContext(), FormActivity.class);
+            newNoticeIntent.putExtra("lat", myLocation.getLatitude());
+            newNoticeIntent.putExtra("lng", myLocation.getLongitude());
             startActivity(newNoticeIntent);
             return true;
         }
@@ -89,17 +91,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             startActivity(intent);
         } else {
-            enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            String provider = LocationManager.GPS_PROVIDER;
-            if (enabled) {
-                provider = LocationManager.NETWORK_PROVIDER;
-            }
-            locationManager.requestLocationUpdates(provider, 1000, 10, this);
-            myLocation = getMyLocation(mMap, provider, locationManager);
-            if (myLocation != null) {
-                LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-            }
+            setLocationProps();
         }
     }
 
@@ -120,7 +112,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 
     @Override
     public void onProviderDisabled(String s) {
-
+        Toast.makeText(this, "Erro ao obter localização GPS", Toast.LENGTH_SHORT).show();
     }
 
     private void addUserMarker(Location location) {
@@ -128,11 +120,31 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
         mMap.addMarker(new MarkerOptions().position(currentPosition).title("Your Position"));
     }
 
-    private Location getMyLocation(GoogleMap map, String provider, LocationManager locationManager) {
-        Location myLocation = map.getMyLocation();
-        if (myLocation == null) {
-            myLocation = locationManager.getLastKnownLocation(provider);
+    private void setLocationProps() {
+        boolean enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        String provider = LocationManager.GPS_PROVIDER;
+        if (enabled) {
+            provider = LocationManager.NETWORK_PROVIDER;
         }
-        return myLocation;
+        locationManager.requestLocationUpdates(provider, 1000, 10, this);
+        myLocation = locationManager.getLastKnownLocation(provider);
+        if (myLocation != null) {
+            LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        } else {
+            Log.i("myLocation => ", "is null");
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == AppCompatActivity.RESULT_OK) {
+            // Adicionou nova denuncia
+            if (requestCode == 100) {
+
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }

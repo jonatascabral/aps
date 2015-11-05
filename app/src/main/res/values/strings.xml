@@ -4,8 +4,16 @@
     <string name="action_settings">Configurações</string>
     <string name="action_notice">Notificar</string>
     <string name="title_activity_form">FormActivity</string>
-    <string name="your_name">Seu Nome:</string>
-    <string name="your_email">Seu E-mail:</string>
+    <string name="your_name">Seu nome:</string>
+    <string name="your_email">Seu e-mail:</string>
     <string name="description">Descreva o vazamento:</string>
     <string name="save">Salvar</string>
+    <string name="wait">Aguarde&#8230;</string>
+    <string name="foto">Foto do vazamento:</string>
+    <string name="foto_select">Selecionar imagem</string>
+
+    <string name="error_name">Nome é obrigatório</string>
+    <string name="error_email">E-mail é obrigatório</string>
+    <string name="error_description">Descrição é obrigatória</string>
+    <!--<string name="error_image">Descrição é obrigatória</string>-->
 </resources>
