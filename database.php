@@ -16,6 +16,8 @@
             `image` VARCHAR(100) NULL,
             `lat` DOUBLE(12,10) NOT NULL,
             `lng` DOUBLE(12,10) NOT NULL,
+            `votes_yes` INT NOT NULL DEFAULT 0,
+            `votes_no` INT NOT NULL DEFAULT 0,
             `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=INNODB DEFAULT CHARACTER SET = utf8;";
 

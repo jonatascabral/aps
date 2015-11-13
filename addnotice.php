@@ -30,7 +30,12 @@
             $query->bindValue(':lng', $dados['lng']);
 
             if ($query->execute()) {
-                $result = ['success' => true, 'message' => 'Denuncia salva com sucesso', 'errors' => []];
+                $sql = 'SELECT *, DATE_FORMAT(`created`, "%d/%m/%Y") AS `date` FROM `notices` ORDER BY `id` DESC LIMIT 1;';
+                $query = $conn->prepare($sql);
+                if ($query->execute()) {
+                    $marker = $query->fetch();
+                    $result = ['success' => true, 'message' => 'Denuncia salva com sucesso', 'errors' => [], 'marker' => $marker];
+                }
             }
         } catch (PDOException $e) {
             die($e->getMessage());
