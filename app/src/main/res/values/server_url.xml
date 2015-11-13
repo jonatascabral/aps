@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="server_url" translatable="false" templateMergeStrategy="preserve">http://192.168.2.20:8080/laravel/public/</string>
+    <string name="server_url" translatable="false" templateMergeStrategy="preserve">http://192.168.85.1:8080/aps/</string>
     <!--<string name="server_url" translatable="false" templateMergeStrategy="preserve">http://challstaging.jelasticlw.com.br/base-hotsites</string>-->
-    <string name="server_add_action" translatable="false" templateMergeStrategy="preserve">addnotice</string>
-    <string name="server_get_action" translatable="false" templateMergeStrategy="preserve">getnotices</string>
+    <string name="server_add_action" translatable="false" templateMergeStrategy="preserve">addnotice.php</string>
+    <string name="server_get_action" translatable="false" templateMergeStrategy="preserve">getnotices.php</string>
 </resources>

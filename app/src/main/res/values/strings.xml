@@ -15,5 +15,9 @@
     <string name="error_name">Nome é obrigatório</string>
     <string name="error_email">E-mail é obrigatório</string>
     <string name="error_description">Descrição é obrigatória</string>
-    <!--<string name="error_image">Descrição é obrigatória</string>-->
+    <!--<string name="error_image">Imagem é obrigatória</string>-->
+
+    <string name="need_gps">O GPS precisa estar disponivel para cadastrar as denuncias</string>
+    <string name="gps_error">Erro ao obter localização GPS</string>
+    <string name="json_error">Erro ao receber informações do servidor</string>
 </resources>

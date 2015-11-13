@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,7 +17,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Iterator;
@@ -44,6 +44,7 @@ public class WebService {
         this.task = new JsonReadTask();
         this.parentActivity.setIntent(new Intent(parentActivity, parentActivity.getClass()));
     }
+
     private class JsonReadTask extends AsyncTask<String, Void, String> {
         private ProgressDialog progressDialog = new ProgressDialog(parentActivity);
         private URL url;
@@ -60,6 +61,7 @@ public class WebService {
                 }
             });
         }
+
         @Override
         protected String doInBackground(String... params) {
             try {
@@ -75,15 +77,10 @@ public class WebService {
                 writer.close();
                 os.close();
                 json = this.inputStreamToString(connection.getInputStream()).toString();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-//                Log.i("")
-            }  catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
+            return json;
         }
 
         private StringBuilder inputStreamToString(InputStream is) {
@@ -96,19 +93,21 @@ public class WebService {
                     answer.append(rLine);
                 }
             } catch (IOException e) {
-                // e.printStackTrace();
+                e.printStackTrace();
+                Toast.makeText(parentActivity, R.string.json_error, Toast.LENGTH_SHORT).show();
             }
             return answer;
         }
 
         @Override
         protected void onPostExecute(String result) {
-            intent.putExtra("json", result);
             progressDialog.dismiss();
-            parentActivity.startActivityForResult(intent, 100);
         }
 
         private String buildQueryFromIntent(Intent intent) throws UnsupportedEncodingException {
+            if (intent == null) {
+                return "";
+            }
             Bundle data = intent.getExtras();
             StringBuilder result = new StringBuilder();
             boolean first = true;
@@ -156,8 +155,9 @@ public class WebService {
         return this.json;
     }
 
-    public void execute() {
+    public AsyncTask execute() {
         this.task.execute();
+        return this.task;
     }
 
     public int getAction() {

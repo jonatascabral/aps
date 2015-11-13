@@ -8,6 +8,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class FormActivity extends BaseActivity implements View.OnClickListener {
 
     private EditText name, email, description;
@@ -58,15 +61,30 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
                     intent = this.putExtrasInIntent(intent);
                     WebService service = new WebService(this, intent);
                     service.setAction(WebService.ACTION_ADD_NOTICE);
-                    service.execute();
+                    try {
+                        Object result = service.execute().get();
+                        JSONObject json = new JSONObject(result.toString());
+                        JSONArray errors = json.getJSONArray("errors");
+                        if (errors != null && errors.length() > 0) {
+                            for (int i = 0; i < errors.length(); i++) {
+                                String error = errors.getString(i);
+                                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            setResult(100, intent);
+                            finish();
+                        }
+                    } catch (Exception e) {
+                        showError(e);
+                    }
                 }
                 break;
         }
     }
 
     private Intent putExtrasInIntent(Intent intent) {
-        intent.putExtra("name", name.getText().toString());
-        intent.putExtra("email", email.getText().toString());
+        intent.putExtra("username", name.getText().toString());
+        intent.putExtra("useremail", email.getText().toString());
         intent.putExtra("description", description.getText().toString());
         intent.putExtra("debug", true);
         intent.putExtra("lat", requestIntent.getDoubleExtra("lat", 0));

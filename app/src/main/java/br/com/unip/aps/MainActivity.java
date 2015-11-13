@@ -7,7 +7,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,26 +14,63 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends BaseActivity implements OnMapReadyCallback, LocationListener {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class MainActivity extends BaseActivity implements OnMapReadyCallback, LocationListener, OnMarkerClickListener {
 
     private GoogleMap mMap;
     private LocationManager locationManager;
     private Location myLocation;
+    private boolean canGetLocation = false;
+    private String locationProvider;
+    private static final int MIN_TIME_BW_UPDATES = 15000;
+    private static final int MIN_DISTANCE_CHANGE_FOR_UPDATES = 15000;
+    protected String json;
+    protected String[] markers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        WebService service = new WebService(this, null);
+        service.setAction(WebService.ACTION_GET_NOTICES);
+        try {
+            Object jsonObject = service.execute().get();
+            if (jsonObject != null) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_main);
+                // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+                SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+                mapFragment.getMapAsync(this);
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+                try {
+                    JSONObject json = new JSONObject(jsonObject.toString());
+                    JSONArray jsonMarkers = json.getJSONArray("markers");
+                    int numMarkers = jsonMarkers.length();
+                    markers = new String[numMarkers];
+                    for (int i = 0; i < numMarkers; ++i) {
+                        markers[i] = jsonMarkers.getString(i);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, R.string.json_error, Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Log.i("json is ", "null");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, R.string.json_error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -60,11 +96,11 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
         if (id == R.id.action_settings) {
             return true;
         }
-        if (id == R.id.action_new_notice) {
+        if (id == R.id.action_new_notice && this.canGetLocation) {
             Intent newNoticeIntent = new Intent(getBaseContext(), FormActivity.class);
             newNoticeIntent.putExtra("lat", myLocation.getLatitude());
             newNoticeIntent.putExtra("lng", myLocation.getLongitude());
-            startActivity(newNoticeIntent);
+            startActivityForResult(newNoticeIntent, 100);
             return true;
         }
 
@@ -85,13 +121,26 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
+        myLocation = this.getLocation();
+        mMap.setOnMarkerClickListener(this);
 
-        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (! enabled) {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(intent);
-        } else {
-            setLocationProps();
+        if (!this.canGetLocation) {
+            Toast.makeText(this, R.string.gps_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (myLocation != null) {
+            LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        }
+        if (markers != null) {
+            for (int i = 0; i < markers.length; ++i) {
+                try {
+                    JSONObject marker = new JSONObject(markers[i]);
+                    addUserMarker(marker.getDouble("lat"), marker.getDouble("lng"), "");
+                } catch (JSONException e) {
+                    showError(e);
+                }
+            }
         }
     }
 
@@ -112,39 +161,77 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 
     @Override
     public void onProviderDisabled(String s) {
-        Toast.makeText(this, "Erro ao obter localização GPS", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.gps_error, Toast.LENGTH_SHORT).show();
     }
 
-    private void addUserMarker(Location location) {
-        LatLng currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(currentPosition).title("Your Position"));
+    private void addUserMarker(double latitude, double longitude, String title) {
+        LatLng currentPosition = new LatLng(latitude, longitude);
+        mMap.addMarker(new MarkerOptions().position(currentPosition).title(title));
     }
 
-    private void setLocationProps() {
-        boolean enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        String provider = LocationManager.GPS_PROVIDER;
-        if (enabled) {
-            provider = LocationManager.NETWORK_PROVIDER;
+    private Location getLocation() {
+        Location location = null;
+        try {
+            // getting GPS status
+            boolean isGPSEnabled = locationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+            // getting network status
+            boolean isNetworkEnabled = locationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if (!isGPSEnabled && !isNetworkEnabled) {
+                Toast.makeText(this, R.string.need_gps, Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            } else {
+                this.canGetLocation = true;
+                if (isNetworkEnabled) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+                    locationProvider = LocationManager.NETWORK_PROVIDER;
+                    if (locationManager != null) {
+                        location = locationManager
+                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    }
+                }
+                // if GPS Enabled get lat/long using GPS Services
+                if (isGPSEnabled && location == null) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+                    locationProvider = LocationManager.GPS_PROVIDER;
+                    if (locationManager != null) {
+                        location = locationManager
+                                .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    }
+                }
+            }
+
+        } catch (SecurityException e) {
+            canGetLocation = false;
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        locationManager.requestLocationUpdates(provider, 1000, 10, this);
-        myLocation = locationManager.getLastKnownLocation(provider);
-        if (myLocation != null) {
-            LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-        } else {
-            Log.i("myLocation => ", "is null");
-        }
+
+        return location;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == AppCompatActivity.RESULT_OK) {
-            // Adicionou nova denuncia
-            if (requestCode == 100) {
-
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == BaseActivity.NEW_NOTICE_RESULT_CODE) {
+            setIntent(data);
+            addUserMarker(data.getDoubleExtra("lat", 0), data.getDoubleExtra("lng", 0), "Denuncia");
         }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return true;
     }
 }
