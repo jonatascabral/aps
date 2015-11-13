@@ -33,7 +33,6 @@ public class WebService {
     private AppCompatActivity parentActivity;
     private Intent intent;
     private JsonReadTask task;
-    private boolean debug = false;
     private int action;
     public static final int ACTION_ADD_NOTICE = 1;
     public static final int ACTION_GET_NOTICES = 2;
@@ -67,16 +66,24 @@ public class WebService {
             try {
                 String postParams = this.buildQueryFromIntent(intent);
                 url = new URL(serverAddress);
+
                 connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
                 connection.setRequestMethod("POST");
-                connection.connect();
                 OutputStream os = connection.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
                 writer.write(postParams);
                 writer.flush();
                 writer.close();
                 os.close();
-                json = this.inputStreamToString(connection.getInputStream()).toString();
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    json = this.inputStreamToString(connection.getInputStream()).toString();
+                } else {
+                    Toast.makeText(parentActivity, R.string.json_error, Toast.LENGTH_SHORT).show();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

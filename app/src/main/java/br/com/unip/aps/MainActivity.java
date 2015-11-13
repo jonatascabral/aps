@@ -10,11 +10,13 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -25,17 +27,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends BaseActivity implements OnMapReadyCallback, LocationListener, OnMarkerClickListener {
+import java.util.HashMap;
+
+public class MainActivity extends BaseActivity implements OnMapReadyCallback, LocationListener, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private LocationManager locationManager;
     private Location myLocation;
     private boolean canGetLocation = false;
-    private String locationProvider;
     private static final int MIN_TIME_BW_UPDATES = 15000;
     private static final int MIN_DISTANCE_CHANGE_FOR_UPDATES = 15000;
-    protected String json;
-    protected String[] markers;
+    protected HashMap<Integer, JSONObject> markers = new HashMap<>();
+    protected HashMap<Marker, Integer> mHashMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +59,9 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                     JSONObject json = new JSONObject(jsonObject.toString());
                     JSONArray jsonMarkers = json.getJSONArray("markers");
                     int numMarkers = jsonMarkers.length();
-                    markers = new String[numMarkers];
                     for (int i = 0; i < numMarkers; ++i) {
-                        markers[i] = jsonMarkers.getString(i);
+                        JSONObject marker = new JSONObject(jsonMarkers.getString(i));
+                        markers.put(marker.getInt("id"), marker);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -123,6 +126,40 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
         mMap.setMyLocationEnabled(true);
         myLocation = this.getLocation();
         mMap.setOnMarkerClickListener(this);
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            // Use default InfoWindow frame
+            @Override
+            public View getInfoWindow(Marker arg0) {
+                return null;
+            }
+
+            // Defines the contents of the InfoWindow
+            @Override
+            public View getInfoContents(Marker marker) {
+                int id = mHashMap.get(marker);
+                View view = getLayoutInflater().inflate(R.layout.info_window_layout, null);
+
+                ImageView image = (ImageView) view.findViewById(R.id.notice_image);
+                TextView username = (TextView) view.findViewById(R.id.username);
+                TextView date = (TextView) view.findViewById(R.id.date);
+                TextView description = (TextView) view.findViewById(R.id.description);
+//                TextView voteYes = (TextView) view.findViewById(R.id.votes_yes);
+//                TextView voteNo = (TextView) view.findViewById(R.id.votes_no);
+                try {
+                    image.setVisibility(View.GONE);
+                    username.setText(markers.get(id).getString("username"));
+                    date.setText(markers.get(id).getString("date"));
+                    description.setText(markers.get(id).getString("description"));
+//                    voteYes.setText(markers.get(id).getString("votes_yes"));
+//                    voteNo.setText(markers.get(id).getString("votes_no"));
+                    return view;
+                } catch (JSONException e) {
+                    // Toast.makeText(this, R.string.info_error, Toast.LENGTH_SHORT).show();
+                }
+                return null;
+            }
+        });
 
         if (!this.canGetLocation) {
             Toast.makeText(this, R.string.gps_error, Toast.LENGTH_SHORT).show();
@@ -132,11 +169,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
             LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         }
-        if (markers != null) {
-            for (int i = 0; i < markers.length; ++i) {
+        if (markers.size() > 0) {
+            for (int i : markers.keySet()){
                 try {
-                    JSONObject marker = new JSONObject(markers[i]);
-                    addUserMarker(marker.getDouble("lat"), marker.getDouble("lng"), "");
+                    addUserMarker(markers.get(i).getDouble("lat"), markers.get(i).getDouble("lng"), markers.get(i).getInt("id"));
                 } catch (JSONException e) {
                     showError(e);
                 }
@@ -164,9 +200,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
         Toast.makeText(this, R.string.gps_error, Toast.LENGTH_SHORT).show();
     }
 
-    private void addUserMarker(double latitude, double longitude, String title) {
-        LatLng currentPosition = new LatLng(latitude, longitude);
-        mMap.addMarker(new MarkerOptions().position(currentPosition).title(title));
+    private void addUserMarker(double latitude, double longitude, int id) {
+        LatLng position = new LatLng(latitude, longitude);
+        Marker marker = mMap.addMarker(new MarkerOptions().position(position));
+        mHashMap.put(marker, id);
     }
 
     private Location getLocation() {
@@ -191,7 +228,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                             LocationManager.NETWORK_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                    locationProvider = LocationManager.NETWORK_PROVIDER;
+//                    locationProvider = LocationManager.NETWORK_PROVIDER;
                     if (locationManager != null) {
                         location = locationManager
                                 .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -203,7 +240,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                             LocationManager.GPS_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                    locationProvider = LocationManager.GPS_PROVIDER;
+//                    locationProvider = LocationManager.GPS_PROVIDER;
                     if (locationManager != null) {
                         location = locationManager
                                 .getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -225,13 +262,18 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == BaseActivity.NEW_NOTICE_RESULT_CODE) {
-            setIntent(data);
-            addUserMarker(data.getDoubleExtra("lat", 0), data.getDoubleExtra("lng", 0), "Denuncia");
+            addUserMarker(data.getDoubleExtra("lat", 0), data.getDoubleExtra("lng", 0), data.getIntExtra("id", 1));
+            try {
+                markers.put(data.getIntExtra("id", 1), new JSONObject(data.getStringExtra("marker")));
+            } catch (Exception e) {
+                showError(e);
+            }
         }
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        marker.showInfoWindow();
         return true;
     }
 }

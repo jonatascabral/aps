@@ -3,7 +3,7 @@
     <string name="title_activity_main">Mapa</string>
     <string name="action_settings">Configurações</string>
     <string name="action_notice">Notificar</string>
-    <string name="title_activity_form">FormActivity</string>
+    <string name="title_activity_form">Nova denuncia</string>
     <string name="your_name">Seu nome:</string>
     <string name="your_email">Seu e-mail:</string>
     <string name="description">Descreva o vazamento:</string>
@@ -15,9 +15,19 @@
     <string name="error_name">Nome é obrigatório</string>
     <string name="error_email">E-mail é obrigatório</string>
     <string name="error_description">Descrição é obrigatória</string>
-    <!--<string name="error_image">Imagem é obrigatória</string>-->
+    <string name="error_image">Imagem é obrigatória</string>
 
     <string name="need_gps">O GPS precisa estar disponivel para cadastrar as denuncias</string>
     <string name="gps_error">Erro ao obter localização GPS</string>
     <string name="json_error">Erro ao receber informações do servidor</string>
+    <string name="info_error">Erro ao receber informações do denuncia</string>
+
+    <!--<string name="existe">Existe</string>
+    <string name="nao_existe">Não existe</string>
+    <string name="num_existes">Nº existe:</string>
+    <string name="num_nao_existes">Nº não existe:</string>-->
+
+    <string name="description_value">Descrição do vazamento:</string>
+    <string name="date_value">Data da denuncia:</string>
+    <string name="username_value">Usuário denunciante:</string>
 </resources>
