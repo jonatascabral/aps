@@ -2,12 +2,8 @@ package br.com.unip.aps;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,13 +13,13 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-
 public class FormActivity extends BaseActivity implements View.OnClickListener {
 
     private EditText name, email, description;
     private ImageView image;
+    private Bitmap photo;
     private Intent requestIntent;
+    private Intent resultIntent;
     private static final int CAMERA_REQUEST = 1555;
 
     @Override
@@ -55,34 +51,12 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
         int id = view.getId();
         switch (id) {
             case R.id.btn_add_notice:
-                Intent intent = new Intent(this, MainActivity.class);
-                if (this.validateFormFields(intent)) {
-                    intent = this.putExtrasInIntent(intent);
-                    WebService service = new WebService(this, intent);
+                resultIntent  = new Intent(this, MainActivity.class);
+                if (this.validateFormFields(resultIntent)) {
+                    resultIntent = this.putExtrasInIntent(resultIntent);
+                    WebService service = new WebService(this, resultIntent, this);
                     service.setAction(WebService.ACTION_ADD_NOTICE);
-                    Object result = null;
-                    try {
-                        result = service.execute().get();
-                        JSONObject json = new JSONObject(result.toString());
-                        JSONArray errors = json.getJSONArray("errors");
-                        if (errors != null && errors.length() > 0) {
-                            for (int i = 0; i < errors.length(); i++) {
-                                String error = errors.getString(i);
-                                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-                            }
-                        } else {
-                            intent.putExtra("marker", json.getString("marker"));
-                            setResult(100, intent);
-                            finish();
-                        }
-                    } catch (Exception e) {
-                        showError(e);
-                        if (result != null) {
-                            Log.i("object", result.toString());
-                        } else {
-                            Log.i("object", "null");
-                        }
-                    }
+                    service.execute();
                 }
                 break;
             case R.id.btn_add_image:
@@ -99,7 +73,7 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
         intent.putExtra("debug", true);
         intent.putExtra("lat", requestIntent.getDoubleExtra("lat", 0));
         intent.putExtra("lng", requestIntent.getDoubleExtra("lng", 0));
-        intent.putExtra("image", getStringImage(getBitmapFromView(image)));
+        intent.putExtra("image", getStringImage(photo));
 
         return intent;
     }
@@ -116,10 +90,10 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
         } else if (description.getText().toString().equalsIgnoreCase("")) {
             erro = true;
             message = getResources().getString(R.string.error_description);
-        } else if (getBitmapFromView(image) == null) {
+        }/* else if (photo == null) {
             erro = true;
             message = getResources().getString(R.string.error_image);
-        }
+        }*/
         if (erro) {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
@@ -129,7 +103,29 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
+            this.photo = photo;
             image.setImageBitmap(photo);
+        }
+    }
+
+    @Override
+    public void onAddNotice(String jsonNotice) {
+        super.onAddNotice(jsonNotice);
+        try {
+            JSONObject json = new JSONObject(jsonNotice);
+            JSONArray errors = json.getJSONArray("errors");
+            if (errors != null && errors.length() > 0) {
+                for (int i = 0; i < errors.length(); i++) {
+                    String error = errors.getString(i);
+                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                resultIntent.putExtra("marker", json.getString("marker"));
+                setResult(100, resultIntent);
+                finish();
+            }
+        } catch (Exception e) {
+            showError(e);
         }
     }
 }

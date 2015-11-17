@@ -5,21 +5,31 @@
               android:gravity="center_horizontal"
               android:orientation="vertical"
               android:paddingTop="@dimen/activity_vertical_margin"
-              android:paddingBottom="@dimen/activity_vertical_margin">
+              android:paddingBottom="@dimen/activity_vertical_margin"
+              android:minWidth="@dimen/info_image_size_w">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/activity_vertical_margin">
+        android:layout_gravity="center_horizontal">
 
         <ImageView
-            android:layout_width="@dimen/info_image_size"
-            android:layout_height="@dimen/info_image_size"
+            android:layout_width="@dimen/info_image_size_w"
+            android:layout_height="@dimen/info_image_size_h"
             android:id="@+id/notice_image"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"/>
+            android:contentDescription="@string/app_name"
+            android:src="@android:drawable/ic_input_add"
+            android:layout_gravity="center_horizontal"/>
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/no_image"
+            android:text="@string/no_image"
+            android:gravity="center_horizontal"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -27,7 +37,8 @@
             android:text="@string/username_value"
             android:id="@+id/textView9"
             android:layout_weight="1"
-            android:textAppearance="?android:attr/textAppearanceSmall"/>
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:layout_marginTop="@dimen/activity_vertical_margin"/>
 
         <TextView
                 android:layout_width="match_parent"

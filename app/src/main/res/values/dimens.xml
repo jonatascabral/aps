@@ -4,6 +4,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="preview_size">90dp</dimen>
-    <dimen name="info_image_size">85dp</dimen>
+    <dimen name="info_image_size_w">240dp</dimen>
+    <dimen name="info_image_size_h">160dp</dimen>
     <dimen name="votes_button_size">50dp</dimen>
 </resources>

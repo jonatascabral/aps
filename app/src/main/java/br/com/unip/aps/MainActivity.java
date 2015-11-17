@@ -8,7 +8,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -51,26 +50,9 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         try {
-            WebService service = new WebService(this, null);
+            WebService service = new WebService(this, null, this);
             service.setAction(WebService.ACTION_GET_NOTICES);
-            Object jsonObject = service.execute().get();
-            if (jsonObject != null) {
-
-                try {
-                    JSONObject json = new JSONObject(jsonObject.toString());
-                    JSONArray jsonMarkers = json.getJSONArray("markers");
-                    int numMarkers = jsonMarkers.length();
-                    for (int i = 0; i < numMarkers; ++i) {
-                        JSONObject marker = new JSONObject(jsonMarkers.getString(i));
-                        markers.put(marker.getInt("id"), marker);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Toast.makeText(this, R.string.json_error, Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Log.i("json is ", "null");
-            }
+            service.execute();
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, R.string.json_error, Toast.LENGTH_SHORT).show();
@@ -145,6 +127,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                 TextView username = (TextView) view.findViewById(R.id.username);
                 TextView date = (TextView) view.findViewById(R.id.date);
                 TextView description = (TextView) view.findViewById(R.id.description);
+                TextView noImage = (TextView) view.findViewById(R.id.no_image);
 //                TextView voteYes = (TextView) view.findViewById(R.id.votes_yes);
 //                TextView voteNo = (TextView) view.findViewById(R.id.votes_no);
                 try {
@@ -153,6 +136,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                         image.setVisibility(View.GONE);
                     } else {
                         image.setImageBitmap(bitmap);
+                        noImage.setVisibility(View.GONE);
                     }
                     username.setText(markers.get(id).getString("username"));
                     date.setText(markers.get(id).getString("date"));
@@ -160,8 +144,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 //                    voteYes.setText(markers.get(id).getString("votes_yes"));
 //                    voteNo.setText(markers.get(id).getString("votes_no"));
                     return view;
-                } catch (JSONException e) {
-                    // Toast.makeText(this, R.string.info_error, Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(getBaseContext(), R.string.info_error, Toast.LENGTH_SHORT).show();
                 }
                 return null;
             }
@@ -192,14 +176,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
     }
 
     @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-
-    }
+    public void onStatusChanged(String s, int i, Bundle bundle) {}
 
     @Override
-    public void onProviderEnabled(String s) {
-
-    }
+    public void onProviderEnabled(String s) {}
 
     @Override
     public void onProviderDisabled(String s) {
@@ -267,13 +247,16 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == BaseActivity.NEW_NOTICE_RESULT_CODE) {
-            addUserMarker(data.getDoubleExtra("lat", 0), data.getDoubleExtra("lng", 0), data.getIntExtra("id", 1));
-            try {
-                markers.put(data.getIntExtra("id", 1), new JSONObject(data.getStringExtra("marker")));
-            } catch (Exception e) {
-                showError(e);
-            }
+        switch (resultCode) {
+            case BaseActivity.NEW_NOTICE_RESULT_CODE:
+                try {
+                    JSONObject marker = new JSONObject(data.getStringExtra("marker"));
+                    addUserMarker(marker.getDouble("lat"), marker.getDouble("lng"), marker.getInt("id"));
+                    markers.put(marker.getInt("id"), marker);
+                } catch (Exception e) {
+                    showError(e);
+                }
+                break;
         }
     }
 
@@ -281,5 +264,23 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
     public boolean onMarkerClick(Marker marker) {
         marker.showInfoWindow();
         return true;
+    }
+
+    @Override
+    public void onGetNotices(String jsonNotices) {
+        super.onGetNotices(jsonNotices);
+        try {
+            JSONObject json = new JSONObject(jsonNotices);
+            JSONArray jsonMarkers = json.getJSONArray("markers");
+            int numMarkers = jsonMarkers.length();
+            for (int i = 0; i < numMarkers; ++i) {
+                JSONObject marker = new JSONObject(jsonMarkers.getString(i));
+                markers.put(marker.getInt("id"), marker);
+                addUserMarker(marker.getDouble("lat"), marker.getDouble("lng"), marker.getInt("id"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Toast.makeText(this, R.string.json_error, Toast.LENGTH_SHORT).show();
+        }
     }
 }

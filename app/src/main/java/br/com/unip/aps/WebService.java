@@ -18,7 +18,6 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -31,34 +30,30 @@ public class WebService {
     private String json;
     private String serverAddress;
     private AppCompatActivity parentActivity;
+    private GetJSONListener listener;
     private Intent intent;
     private JsonReadTask task;
     private int action;
+    private ProgressDialog progressDialog;
     public static final int ACTION_ADD_NOTICE = 1;
+
     public static final int ACTION_GET_NOTICES = 2;
 
-    public WebService(AppCompatActivity parentActivity, Intent intent) {
+    public WebService(AppCompatActivity parentActivity, Intent intent, GetJSONListener listener) {
+        this.listener = listener;
         this.parentActivity = parentActivity;
         this.intent = intent;
         this.task = new JsonReadTask();
         this.parentActivity.setIntent(new Intent(parentActivity, parentActivity.getClass()));
+        progressDialog = new ProgressDialog(parentActivity);
     }
 
     private class JsonReadTask extends AsyncTask<String, Void, String> {
-        private ProgressDialog progressDialog = new ProgressDialog(parentActivity);
         private URL url;
         private HttpURLConnection connection;
 
         protected void onPreExecute() {
-            String message = parentActivity.getResources().getString(R.string.wait);
-            serverAddress = parseServerAddress();
-            progressDialog.setMessage(message);
-            progressDialog.show();
-            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                public void onCancel(DialogInterface arg0) {
-                    JsonReadTask.this.cancel(true);
-                }
-            });
+            showDialog();
         }
 
         @Override
@@ -108,7 +103,12 @@ public class WebService {
 
         @Override
         protected void onPostExecute(String result) {
-            progressDialog.dismiss();
+            hideDialog();
+            if (getAction() == WebService.ACTION_ADD_NOTICE) {
+                listener.onAddNotice(result);
+            } else if (getAction() == WebService.ACTION_GET_NOTICES) {
+                listener.onGetNotices(result);
+            }
         }
 
         private String buildQueryFromIntent(Intent intent) throws UnsupportedEncodingException {
@@ -135,14 +135,30 @@ public class WebService {
                         result.append("&");
                     }
 
-                    result.append(URLEncoder.encode(key, "UTF-8"));
+                    result.append(key);
                     result.append("=");
-                    result.append(URLEncoder.encode(value, "UTF-8"));
+                    result.append(value);
                 }
             }
             return result.toString();
         }
-    }// end async task
+    }
+
+    public void showDialog() {
+        String message = parentActivity.getResources().getString(R.string.wait);
+        serverAddress = parseServerAddress();
+        progressDialog.setMessage(message);
+        progressDialog.show();
+        progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            public void onCancel(DialogInterface arg0) {
+                task.cancel(true);
+            }
+        });
+    }
+
+    public void hideDialog() {
+        progressDialog.dismiss();
+    }
 
     private String parseServerAddress() {
         String address = parentActivity.getResources().getString(R.string.server_url);

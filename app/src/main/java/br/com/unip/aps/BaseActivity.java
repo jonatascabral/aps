@@ -12,10 +12,11 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 
-public class BaseActivity extends AppCompatActivity {
+public class BaseActivity extends AppCompatActivity implements GetJSONListener {
 
     protected Toolbar toolbar;
     protected final static int NEW_NOTICE_RESULT_CODE = 100;
+    protected final static int GET_NOTICES_RESULT_CODE = 150;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,4 +57,11 @@ public class BaseActivity extends AppCompatActivity {
         byte[] imageBytes = baos.toByteArray();
         return Base64.encodeToString(imageBytes, Base64.URL_SAFE);
     }
+
+
+    @Override
+    public void onAddNotice(String jsonNotice) {}
+
+    @Override
+    public void onGetNotices(String jsonNotices) {}
 }
