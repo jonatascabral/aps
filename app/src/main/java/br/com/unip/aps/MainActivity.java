@@ -2,6 +2,7 @@ package br.com.unip.aps;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -42,18 +43,18 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        WebService service = new WebService(this, null);
-        service.setAction(WebService.ACTION_GET_NOTICES);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         try {
+            WebService service = new WebService(this, null);
+            service.setAction(WebService.ACTION_GET_NOTICES);
             Object jsonObject = service.execute().get();
             if (jsonObject != null) {
-                super.onCreate(savedInstanceState);
-                setContentView(R.layout.activity_main);
-                // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-                SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-                mapFragment.getMapAsync(this);
-
-                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
                 try {
                     JSONObject json = new JSONObject(jsonObject.toString());
@@ -147,7 +148,12 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 //                TextView voteYes = (TextView) view.findViewById(R.id.votes_yes);
 //                TextView voteNo = (TextView) view.findViewById(R.id.votes_no);
                 try {
-                    image.setVisibility(View.GONE);
+                    Bitmap bitmap = getImageFromString(markers.get(id).getString("image"));
+                    if (bitmap == null) {
+                        image.setVisibility(View.GONE);
+                    } else {
+                        image.setImageBitmap(bitmap);
+                    }
                     username.setText(markers.get(id).getString("username"));
                     date.setText(markers.get(id).getString("date"));
                     description.setText(markers.get(id).getString("description"));

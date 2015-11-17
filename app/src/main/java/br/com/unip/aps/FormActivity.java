@@ -2,6 +2,7 @@ package br.com.unip.aps;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -130,16 +131,5 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             image.setImageBitmap(photo);
         }
-    }
-
-    private Bitmap getBitmapFromView(ImageView view) {
-        return ((BitmapDrawable) view.getDrawable()).getBitmap();
-    }
-
-    private String getStringImage(Bitmap bmp){
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageBytes = baos.toByteArray();
-        return Base64.encodeToString(imageBytes, Base64.DEFAULT);
     }
 }
