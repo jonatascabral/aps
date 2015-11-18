@@ -278,9 +278,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                 markers.put(marker.getInt("id"), marker);
                 addUserMarker(marker.getDouble("lat"), marker.getDouble("lng"), marker.getInt("id"));
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-            Toast.makeText(this, R.string.json_error, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            showError(e);
         }
     }
 }
