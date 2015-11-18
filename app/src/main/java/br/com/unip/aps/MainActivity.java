@@ -50,7 +50,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         try {
-            WebService service = new WebService(this, null, this);
+            WebService service = new WebService(this, null, this, getResources().getString(R.string.get_notices_wait));
             service.setAction(WebService.ACTION_GET_NOTICES);
             service.execute();
         } catch (Exception e) {

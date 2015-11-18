@@ -54,7 +54,7 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
                 resultIntent  = new Intent(this, MainActivity.class);
                 if (this.validateFormFields(resultIntent)) {
                     resultIntent = this.putExtrasInIntent(resultIntent);
-                    WebService service = new WebService(this, resultIntent, this);
+                    WebService service = new WebService(this, resultIntent, this, getResources().getString(R.string.new_notice_wait));
                     service.setAction(WebService.ACTION_ADD_NOTICE);
                     service.execute();
                 }

@@ -1,7 +1,6 @@
 package br.com.unip.aps;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -33,18 +32,20 @@ public class WebService {
     private GetJSONListener listener;
     private Intent intent;
     private JsonReadTask task;
+    private String message;
     private int action;
     private ProgressDialog progressDialog;
     public static final int ACTION_ADD_NOTICE = 1;
 
     public static final int ACTION_GET_NOTICES = 2;
 
-    public WebService(AppCompatActivity parentActivity, Intent intent, GetJSONListener listener) {
+    public WebService(AppCompatActivity parentActivity, Intent intent, GetJSONListener listener, String message) {
         this.listener = listener;
         this.parentActivity = parentActivity;
         this.intent = intent;
         this.task = new JsonReadTask();
         this.parentActivity.setIntent(new Intent(parentActivity, parentActivity.getClass()));
+        this.message = message;
         progressDialog = new ProgressDialog(parentActivity);
     }
 
@@ -60,6 +61,7 @@ public class WebService {
         protected String doInBackground(String... params) {
             try {
                 String postParams = this.buildQueryFromIntent(intent);
+                serverAddress = parseServerAddress();
                 url = new URL(serverAddress);
 
                 connection = (HttpURLConnection) url.openConnection();
@@ -145,15 +147,11 @@ public class WebService {
     }
 
     public void showDialog() {
-        String message = parentActivity.getResources().getString(R.string.wait);
-        serverAddress = parseServerAddress();
+        String title = parentActivity.getResources().getString(R.string.wait);
+        progressDialog.setTitle(title);
         progressDialog.setMessage(message);
         progressDialog.show();
-        progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            public void onCancel(DialogInterface arg0) {
-                task.cancel(true);
-            }
-        });
+        progressDialog.setCancelable(false);
     }
 
     public void hideDialog() {

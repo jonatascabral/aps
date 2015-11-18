@@ -9,6 +9,13 @@
     tools:context="br.com.unip.aps.FormActivity">
 
     <include android:id="@+id/tool_bar" layout="@layout/toolbar" />
-    <include layout="@layout/content_form"/>
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/scrollView">
+
+        <include layout="@layout/content_form"/>
+    </ScrollView>
 
 </LinearLayout>

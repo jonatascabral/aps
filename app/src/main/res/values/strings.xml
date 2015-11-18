@@ -9,6 +9,8 @@
     <string name="description">Descreva o vazamento:</string>
     <string name="save">Salvar</string>
     <string name="wait">Aguarde&#8230;</string>
+    <string name="new_notice_wait">Adicionando denuncia&#8230;</string>
+    <string name="get_notices_wait">Buscando denuncias&#8230;</string>
     <string name="foto">Foto do vazamento:</string>
     <string name="foto_select">Selecionar imagem</string>
 
