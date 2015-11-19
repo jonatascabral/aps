@@ -13,9 +13,9 @@
             `username` VARCHAR(100) NOT NULL,
             `useremail` VARCHAR(100) NOT NULL,
             `description` TEXT NOT NULL,
-            `image` VARCHAR(100) NULL,
-            `lat` DOUBLE(12,10) NOT NULL,
-            `lng` DOUBLE(12,10) NOT NULL,
+            `image` LONGTEXT NULL,
+            `lat` DOUBLE(9,7) NOT NULL,
+            `lng` DOUBLE(9,7) NOT NULL,
             `votes_yes` INT NOT NULL DEFAULT 0,
             `votes_no` INT NOT NULL DEFAULT 0,
             `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

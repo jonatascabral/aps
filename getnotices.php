@@ -8,7 +8,7 @@
     try {
         $query = $conn->prepare($sql);
         if ($query->execute()) {
-            $markers = $query->fetchAll();
+            $markers = $query->fetchAll(PDO::FETCH_ASSOC);
             $result = ['result_type' => 'list', 'success' => true, 'errors' => [], 'markers' => $markers];
         }
     } catch (PDOException $e) {
