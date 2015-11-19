@@ -8,6 +8,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -279,6 +280,9 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Lo
                 addUserMarker(marker.getDouble("lat"), marker.getDouble("lng"), marker.getInt("id"));
             }
         } catch (Exception e) {
+            if (jsonNotices != null) {
+                Log.i("json", jsonNotices);
+            }
             showError(e);
         }
     }

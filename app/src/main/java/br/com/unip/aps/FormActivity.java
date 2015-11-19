@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -70,7 +71,7 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
         intent.putExtra("username", name.getText().toString());
         intent.putExtra("useremail", email.getText().toString());
         intent.putExtra("description", description.getText().toString());
-        intent.putExtra("debug", true);
+        intent.putExtra("debug", "true");
         intent.putExtra("lat", requestIntent.getDoubleExtra("lat", 0));
         intent.putExtra("lng", requestIntent.getDoubleExtra("lng", 0));
         intent.putExtra("image", getStringImage(photo));
@@ -125,6 +126,9 @@ public class FormActivity extends BaseActivity implements View.OnClickListener {
                 finish();
             }
         } catch (Exception e) {
+            if (jsonNotice != null) {
+                Log.i("json", jsonNotice);
+            }
             showError(e);
         }
     }
