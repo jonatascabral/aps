@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Iterator;
@@ -36,7 +37,6 @@ public class WebService {
     private int action;
     private ProgressDialog progressDialog;
     public static final int ACTION_ADD_NOTICE = 1;
-
     public static final int ACTION_GET_NOTICES = 2;
 
     public WebService(AppCompatActivity parentActivity, Intent intent, GetJSONListener listener, String message) {
@@ -81,6 +81,9 @@ public class WebService {
                 } else {
                     Toast.makeText(parentActivity, R.string.json_error, Toast.LENGTH_SHORT).show();
                 }
+            } catch (ConnectException e) {
+                e.printStackTrace();
+                hideDialog();
             } catch (Exception e) {
                 e.printStackTrace();
             }
